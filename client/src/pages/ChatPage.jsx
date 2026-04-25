@@ -26,7 +26,13 @@ function ChatPage() {
     setLoading(true);
     try {
       const res = await getMessages(chatKey);
-      setMessages(res.data?.messages || res.data || []);
+      const conversations = res.data?.messages || [];
+      // Expand each conversation into a user message + AI reply pair
+      const expanded = conversations.flatMap((conv) => [
+        { role: "user", content: conv.request, id: `${conv.conversation_id}-req` },
+        { role: "assistant", content: conv.response, id: `${conv.conversation_id}-res` },
+      ]);
+      setMessages(expanded);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to load messages.");
     } finally {
@@ -48,10 +54,10 @@ function ChatPage() {
     setError(null);
     try {
       const res = await sendMessage(chatKey, text, model);
-      const reply = res.data;
+      const reply = res.data.conversation;
       setMessages((prev) => [...prev, {
         role: "assistant",
-        content: reply.response || reply.content || reply.message || "",
+        content: reply.response || "",
         id: Date.now() + 1,
       }]);
     } catch (err) {
@@ -59,8 +65,8 @@ function ChatPage() {
       const status = err.response?.status;
       setError(
         status === 401 ? "Session expired. Please log in again." :
-        status === 429 ? "Rate limit reached. Please wait a moment." :
-        err.response?.data?.message || "Failed to send message."
+          status === 429 ? "Rate limit reached. Please wait a moment." :
+            err.response?.data?.message || "Failed to send message."
       );
     } finally {
       setSending(false);

@@ -17,11 +17,11 @@ function ChatsPage() {
   const [deleting, setDeleting] = useState(false);
 
   const loadChats = useCallback(async () => {
-    if (!user?.key) return;
+    if (!user?.user_key) return;
     setLoading(true);
     setError(null);
     try {
-      const res = await getUserChats(user.key);
+      const res = await getUserChats(user.user_key);
       setChats(res.data?.chats || res.data || []);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to load chats.");
@@ -48,9 +48,10 @@ function ChatsPage() {
     if (!deleteTarget) return;
     setDeleting(true);
     try {
-      await deleteChat(deleteTarget.key);
-      setChats((prev) => prev.filter((c) => c.key !== deleteTarget.key));
+      await deleteChat(deleteTarget.chat_key);
+      setChats((prev) => prev.filter((c) => c.key !== deleteTarget.chat_key));
       setDeleteTarget(null);
+      loadChats();
     } catch (err) {
       setError(err.response?.data?.message || "Failed to delete chat.");
     } finally {
@@ -85,7 +86,7 @@ function ChatsPage() {
               <div key={chat.key} className="chat-item" onClick={() => navigate(`/chats/${chat.key}`)}>
                 <div className="chat-item-icon"><FiMessageSquare /></div>
                 <div className="chat-item-body">
-                  <span className="chat-item-title">Chat {chat.key?.slice(0, 8)}</span>
+                  <span className="chat-item-title">Chat {chat.chat_key?.slice(0, 8)}</span>
                   <span className="chat-item-meta">{chat.created_at ? new Date(chat.created_at).toLocaleDateString() : "No date"}</span>
                 </div>
                 <div className="chat-item-actions">
