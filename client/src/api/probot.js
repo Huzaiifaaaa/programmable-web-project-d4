@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const BASE_URL = process.env.REACT_APP_API_URL || "http://127.0.0.1:5000/api/v1";
+const BASE_URL = process.env.REACT_APP_API_URL || "https://pwpapi.cloverta.top/api/v1";
 
 const api = axios.create({ baseURL: BASE_URL });
 
