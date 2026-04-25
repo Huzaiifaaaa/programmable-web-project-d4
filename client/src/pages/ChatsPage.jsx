@@ -1,30 +1,33 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { Container, Button, Alert, Spinner, Modal } from "react-bootstrap";
-import { useNavigate } from "react-router-dom";
-import { FiPlus, FiMessageSquare, FiTrash2, FiChevronRight, FiInbox } from "react-icons/fi";
+import { Spinner, Modal, Button, Form } from "react-bootstrap";
+import { useNavigate, useParams, Routes, Route } from "react-router-dom";
+import { FiPlus, FiMessageSquare, FiTrash2, FiCpu, FiLogOut, FiSearch, FiMenu, FiX } from "react-icons/fi";
+import { toast } from "react-toastify";
 import { getUserChats, createChat, deleteChat } from "../api/probot";
 import { useAuth } from "../context/AuthContext";
-import AppNavbar from "../components/NavBar";
+import ChatPage from "./ChatPage";
 
 function ChatsPage() {
-  const { user } = useAuth();
+  const { user, logoutUser } = useAuth();
   const navigate = useNavigate();
+  const { chatKey } = useParams();
+
   const [chats, setChats] = useState([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
-  const [error, setError] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [search, setSearch] = useState("");
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const loadChats = useCallback(async () => {
     if (!user?.user_key) return;
     setLoading(true);
-    setError(null);
     try {
       const res = await getUserChats(user.user_key);
       setChats(res.data?.chats || res.data || []);
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to load chats.");
+    } catch {
+      toast.error("Failed to load chats.");
     } finally {
       setLoading(false);
     }
@@ -34,12 +37,15 @@ function ChatsPage() {
 
   const handleCreate = async () => {
     setCreating(true);
-    setError(null);
     try {
       const res = await createChat();
-      navigate(`/chats/${res.data.chat.chat_key}`);
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to create chat.");
+      const key = res.data.chat.chat_key;
+      setChats((prev) => [res.data.chat, ...prev]);
+      toast.success("New chat created!");
+      navigate(`/chats/${key}`);
+    } catch {
+      toast.error("Failed to create chat.");
+    } finally {
       setCreating(false);
     }
   };
@@ -49,57 +55,111 @@ function ChatsPage() {
     setDeleting(true);
     try {
       await deleteChat(deleteTarget.chat_key);
-      setChats((prev) => prev.filter((c) => c.key !== deleteTarget.chat_key));
+      setChats((prev) => prev.filter((c) => c.chat_key !== deleteTarget.chat_key));
+      if (chatKey === deleteTarget.chat_key) navigate("/chats");
       setDeleteTarget(null);
-      loadChats();
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to delete chat.");
+      toast.success("Chat deleted.");
+    } catch {
+      toast.error("Failed to delete chat.");
     } finally {
       setDeleting(false);
     }
   };
 
+  const filteredChats = chats.filter((c) =>
+    c.chat_key?.toLowerCase().includes(search.toLowerCase()) ||
+    new Date(c.created_at).toLocaleDateString().includes(search)
+  );
+
   return (
-    <>
-      <AppNavbar />
-      <Container className="chats-container">
-        <div className="chats-header">
-          <div>
-            <h2 className="chats-title">Your Chats</h2>
-            <p className="chats-subtitle">{chats.length} conversation{chats.length !== 1 ? "s" : ""}</p>
+    <div className="app-layout">
+      {/* ── Sidebar ── */}
+      <aside className={`sidebar ${sidebarOpen ? "sidebar-open" : "sidebar-closed"}`}>
+        <div className="sidebar-header">
+          <div className="sidebar-brand">
+            <FiCpu className="brand-icon" />
+            {sidebarOpen && <span>ProBot</span>}
           </div>
-          <Button className="new-chat-btn" onClick={handleCreate} disabled={creating}>
-            {creating ? <Spinner animation="border" size="sm" /> : <><FiPlus className="me-2" />New Chat</>}
-          </Button>
+          <button className="icon-btn" onClick={() => setSidebarOpen(!sidebarOpen)}>
+            {sidebarOpen ? <FiX /> : <FiMenu />}
+          </button>
         </div>
-        {error && <Alert variant="danger" dismissible onClose={() => setError(null)}>{error}</Alert>}
-        {loading ? (
-          <div className="loading-state"><Spinner animation="border" /><p>Loading chats...</p></div>
-        ) : chats.length === 0 ? (
-          <div className="empty-state">
-            <FiInbox size={48} /><h4>No chats yet</h4><p>Start a new conversation with ProBot</p>
-            <Button className="new-chat-btn" onClick={handleCreate}><FiPlus className="me-2" />New Chat</Button>
-          </div>
-        ) : (
-          <div className="chat-list">
-            {chats.map((chat) => (
-              <div key={chat.key} className="chat-item" onClick={() => navigate(`/chats/${chat.key}`)}>
-                <div className="chat-item-icon"><FiMessageSquare /></div>
-                <div className="chat-item-body">
-                  <span className="chat-item-title">Chat {chat.chat_key?.slice(0, 8)}</span>
-                  <span className="chat-item-meta">{chat.created_at ? new Date(chat.created_at).toLocaleDateString() : "No date"}</span>
-                </div>
-                <div className="chat-item-actions">
-                  <button className="delete-btn" onClick={(e) => { e.stopPropagation(); setDeleteTarget(chat); }} title="Delete chat">
-                    <FiTrash2 />
-                  </button>
-                  <FiChevronRight className="chevron" />
-                </div>
-              </div>
-            ))}
-          </div>
+
+        {sidebarOpen && (
+          <>
+            <button className="new-chat-btn" onClick={handleCreate} disabled={creating}>
+              {creating ? <Spinner animation="border" size="sm" /> : <><FiPlus className="me-2" />New Chat</>}
+            </button>
+
+            <div className="sidebar-search">
+              <FiSearch className="search-icon" />
+              <input
+                type="text"
+                placeholder="Search chats..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="search-input"
+              />
+            </div>
+
+            <div className="chat-list">
+              {loading ? (
+                <div className="sidebar-loading"><Spinner animation="border" size="sm" /></div>
+              ) : filteredChats.length === 0 ? (
+                <p className="sidebar-empty">{search ? "No results" : "No chats yet"}</p>
+              ) : (
+                filteredChats.map((chat) => (
+                  <div
+                    key={chat.chat_key}
+                    className={`chat-list-item ${chatKey === chat.chat_key ? "active" : ""}`}
+                    onClick={() => navigate(`/chats/${chat.chat_key}`)}
+                  >
+                    <FiMessageSquare className="chat-list-icon" />
+                    <div className="chat-list-body">
+                      <span className="chat-list-title">Chat {chat.chat_key?.slice(0, 8)}</span>
+                      <span className="chat-list-date">
+                        {chat.created_at ? new Date(chat.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : ""}
+                      </span>
+                    </div>
+                    <button
+                      className="chat-delete-btn"
+                      onClick={(e) => { e.stopPropagation(); setDeleteTarget(chat); }}
+                    >
+                      <FiTrash2 />
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </>
         )}
-      </Container>
+
+        <div className="sidebar-footer">
+          {sidebarOpen && <span className="sidebar-user">{user?.name || user?.email}</span>}
+          <button className="icon-btn logout-icon-btn" onClick={() => { logoutUser(); navigate("/login"); }} title="Logout">
+            <FiLogOut />
+          </button>
+        </div>
+      </aside>
+
+      {/* ── Main content ── */}
+      <main className="main-content">
+        <Routes>
+          <Route index element={
+            <div className="welcome-screen">
+              <FiCpu size={56} className="welcome-icon" />
+              <h2>Welcome to ProBot</h2>
+              <p>Select a chat or start a new conversation</p>
+              <button className="new-chat-btn welcome-btn" onClick={handleCreate} disabled={creating}>
+                {creating ? <Spinner animation="border" size="sm" /> : <><FiPlus className="me-2" />New Chat</>}
+              </button>
+            </div>
+          } />
+          <Route path=":chatKey" element={<ChatPage chats={chats} />} />
+        </Routes>
+      </main>
+
+      {/* ── Delete modal ── */}
       <Modal show={!!deleteTarget} onHide={() => setDeleteTarget(null)} centered>
         <Modal.Header closeButton><Modal.Title>Delete Chat</Modal.Title></Modal.Header>
         <Modal.Body>Are you sure you want to delete this chat? This action cannot be undone.</Modal.Body>
@@ -110,7 +170,7 @@ function ChatsPage() {
           </Button>
         </Modal.Footer>
       </Modal>
-    </>
+    </div>
   );
 }
 
