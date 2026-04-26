@@ -1,70 +1,202 @@
-# Getting Started with Create React App
+# ProBot Client
+**PWP SPRING 2026 — React Web Client**
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+> A ChatGPT-style React web application for the ProBot AI chat API. Built with React, Bootstrap, and Axios.
 
-## Available Scripts
+### Group Information
+* **Student 1:** Muhammad Huzaifa (Muhammad.Huzaifa@student.oulu.fi)
+* **Student 2:** Safi Shah (Safi.Shah@student.oulu.fi)
+* **Student 3:** Zhenfei Sun (Zhenfei.Sun@student.oulu.fi)
 
-In the project directory, you can run:
+---
 
-### `npm start`
+## 1. Overview
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+ProBot Client is a single-page web application that provides a polished, dark-themed chat interface for the ProBot REST API. It was built to give users a familiar, modern experience similar to ChatGPT — with a collapsible sidebar for chat management and a focused conversation view on the right.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+**Why this client?**
+The ProBot API exposes a powerful Gemini-backed conversation system, but without a client it can only be used via raw HTTP tools like curl or Postman. This client makes the API accessible to any user through a browser, with no technical knowledge required.
 
-### `npm test`
+**Key features:**
+- JWT authentication with persistent login
+- ChatGPT-style layout — sidebar with all chats, main area for conversation
+- Create, view, search, and delete chat sessions
+- Send messages and receive AI replies with a live typing indicator
+- Markdown rendering for AI responses (including code blocks)
+- Model selector — switch between Gemini 3 Flash, 2.0 Flash, and 1.5 Pro
+- Timestamps and copy-to-clipboard on every message
+- Toast notifications for all user actions
+- Fully responsive dark-themed UI
+- Informative error handling for all API error codes
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### API Resources and Methods Accessed
 
-### `npm run build`
+| Screen | Method | Endpoint | Description |
+|--------|--------|----------|-------------|
+| Sign Up | `POST` | `/api/v1/signup/` | Register a new user account |
+| Login | `POST` | `/api/v1/login/` | Authenticate and receive JWT token |
+| Chat List (sidebar) | `GET` | `/api/v1/users/<user_key>/chats/` | Load all chats for the logged-in user |
+| New Chat | `POST` | `/api/v1/chats/` | Create a new chat session |
+| Delete Chat | `DELETE` | `/api/v1/chats/<chat_key>/` | Delete a chat session |
+| View Messages | `GET` | `/api/v1/chats/<chat_key>/messages/` | Load full message history of a chat |
+| Send Message | `POST` | `/api/v1/chats/<chat_key>/messages/` | Send a user message and receive AI reply |
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+---
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## 2. Use Case Diagram
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+```
+                        ┌─────────────────────────────────────────┐
+                        │              ProBot Client               │
+                        │                                          │
+  ┌──────────┐          │  ┌────────────────────────────────────┐ │
+  │          │──────────┼─▶│ Register a new account             │ │
+  │          │          │  └────────────────────────────────────┘ │
+  │          │          │                                          │
+  │          │──────────┼─▶┌────────────────────────────────────┐ │
+  │          │          │  │ Log in with email and password      │ │
+  │          │          │  └────────────────────────────────────┘ │
+  │          │          │                                          │
+  │          │──────────┼─▶┌────────────────────────────────────┐ │
+  │          │          │  │ View all chat sessions              │ │
+  │          │          │  └────────────────────────────────────┘ │
+  │   User   │          │                                          │
+  │          │──────────┼─▶┌────────────────────────────────────┐ │
+  │          │          │  │ Search chats                        │ │
+  │          │          │  └────────────────────────────────────┘ │
+  │          │          │                                          │
+  │          │──────────┼─▶┌────────────────────────────────────┐ │
+  │          │          │  │ Create a new chat session           │ │
+  │          │          │  └────────────────────────────────────┘ │
+  │          │          │                                          │
+  │          │──────────┼─▶┌────────────────────────────────────┐ │
+  │          │          │  │ Open a chat and view messages       │ │
+  │          │          │  └────────────────────────────────────┘ │
+  │          │          │                                          │
+  │          │──────────┼─▶┌────────────────────────────────────┐ │
+  │          │          │  │ Send a message to AI                │ │
+  │          │          │  └────────────────────────────────────┘ │
+  │          │          │                                          │
+  │          │──────────┼─▶┌────────────────────────────────────┐ │
+  │          │          │  │ Select AI model for response        │ │
+  │          │          │  └────────────────────────────────────┘ │
+  │          │          │                                          │
+  │          │──────────┼─▶┌────────────────────────────────────┐ │
+  │          │          │  │ Copy a message to clipboard         │ │
+  │          │          │  └────────────────────────────────────┘ │
+  │          │          │                                          │
+  │          │──────────┼─▶┌────────────────────────────────────┐ │
+  │          │          │  │ Delete a chat session               │ │
+  │          │          │  └────────────────────────────────────┘ │
+  │          │          │                                          │
+  └──────────┘──────────┼─▶┌────────────────────────────────────┐ │
+                        │  │ Log out                             │ │
+                        │  └────────────────────────────────────┘ │
+                        └─────────────────────────────────────────┘
+```
+---
 
-### `npm run eject`
+## 3. Installation & Setup
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### Prerequisites
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+- Node.js 18+
+- npm 9+
+- ProBot API running at `http://localhost:5000` (or production URL)
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+### Step 1 — Clone the repository
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+```bash
+git clone https://github.com/your-username/probot-client.git
+cd probot-client
+```
 
-## Learn More
+### Step 2 — Install dependencies
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+```bash
+npm install
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### Step 3 — Configure environment
 
-### Code Splitting
+```bash
+cp .env.example .env
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+Edit `.env`:
 
-### Analyzing the Bundle Size
+```env
+REACT_APP_API_URL={URL}/api/v1
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## 4. Running the Client
 
-### Making a Progressive Web App
+### Development
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+```bash
+npm start
+```
 
-### Advanced Configuration
+Opens at `http://localhost:3000`
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+### Production build
 
-### Deployment
+```bash
+npm run build
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+Output goes to `build/` — serve with any static file server:
 
-### `npm run build` fails to minify
+```bash
+npx serve -s build
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+---
+
+## 5. Project Structure
+
+```
+src/
+├── api/
+│   └── probot.js           # All API calls — axios client with JWT interceptor
+├── context/
+│   └── AuthContext.jsx     # Global auth state (token, user, login, logout)
+├── pages/
+│   ├── LoginPage.jsx       # Login screen
+│   ├── SignupPage.jsx      # Registration screen
+│   └── ChatsPage.jsx       # Main layout — sidebar + nested chat route
+├── App.jsx                 # Router setup and protected routes
+├── App.css                 # Global dark theme styles
+└── index.js                # React entry point
+```
+---
+
+## 6. API Resources Accessed
+
+All requests go through `src/api/probot.js`. The base URL is configurable via `REACT_APP_API_URL`.
+
+| Function | Method | Path | Auth |
+|----------|--------|------|------|
+| `signup()` | POST | `/signup/` | No |
+| `login()` | POST | `/login/` | No |
+| `getUserChats()` | GET | `/users/:user_key/chats/` | Bearer JWT |
+| `createChat()` | POST | `/chats/` | Bearer JWT |
+| `deleteChat()` | DELETE | `/chats/:chat_key/` | Bearer JWT |
+| `getMessages()` | GET | `/chats/:chat_key/messages/` | Bearer JWT |
+| `sendMessage()` | POST | `/chats/:chat_key/messages/` | Bearer JWT |
+
+---
+
+## 7. Sources & Attribution
+
+| Resource | Usage |
+|----------|-------|
+| [React documentation](https://react.dev) | Component patterns, hooks |
+| [React Router v6](https://reactrouter.com) | Routing and nested routes |
+| [Axios documentation](https://axios-http.com) | HTTP client and interceptors |
+| [React Bootstrap](https://react-bootstrap.github.io) | UI components |
+| [react-markdown](https://github.com/remarkjs/react-markdown) | Markdown rendering in AI responses |
+| [react-toastify](https://fkhadra.github.io/react-toastify) | Toast notifications |
+| [React Icons](https://react-icons.github.io/react-icons/) | FI icon set |
+| [Google Fonts — DM Sans / DM Mono](https://fonts.google.com) | Typography |
+| Claude Sonnet (Anthropic) | Code generation assistance, component structure |
