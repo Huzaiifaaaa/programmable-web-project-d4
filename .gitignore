@@ -1,1 +1,3 @@
 .DS_Store
+service/instance/autoservice.db
+/service/venv
