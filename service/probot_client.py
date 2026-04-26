@@ -161,3 +161,4 @@ class ProbotClient:
         except requests.RequestException as exc:
             logger.error("Delete chat error: %s", exc)
             return False
+        

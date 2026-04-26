@@ -68,3 +68,4 @@ class ScheduledTask(db.Model):
             "last_run_at": self.last_run_at.isoformat() if self.last_run_at else None,
             "created_at": self.created_at.isoformat() if self.created_at else None
         }
+    

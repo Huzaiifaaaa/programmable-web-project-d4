@@ -5,12 +5,13 @@ Creates and configures the Flask app, database, CORS, scheduler,
 and registers all API blueprints.
 """
 
-import os
 import logging
 from flask import Flask
 from flask_cors import CORS
 from apscheduler.schedulers.background import BackgroundScheduler
 from dotenv import load_dotenv
+from models import ScheduledTask
+from runner import run_scheduled_task
 
 from extensions import db
 from routes import bp
@@ -45,19 +46,16 @@ def create_app():
 
     with app.app_context():
         db.create_all()
-        _start_scheduler(app)
+        _start_scheduler()
 
     return app
 
 
-def _start_scheduler(app):
+def _start_scheduler():
     """
     Start the background scheduler for periodic tasks.
     Loads all active scheduled tasks from the database on startup.
     """
-    from models import ScheduledTask
-    from runner import run_scheduled_task
-
     if scheduler.running:
         return
 

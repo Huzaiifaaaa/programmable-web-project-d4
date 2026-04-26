@@ -329,4 +329,6 @@ This project uses **PyLint** for code quality checks.
 pylint service/
 ```
 
+![alt text](<Screenshot 2026-04-26 at 17.17.42.png>)
+
 All functions are documented with docstrings. Maximum line length is 100 characters.

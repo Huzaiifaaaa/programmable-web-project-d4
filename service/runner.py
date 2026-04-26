@@ -9,6 +9,7 @@ import uuid
 import time
 import logging
 from datetime import datetime, timezone
+from app import create_app
 
 from extensions import db
 from models import TaskResult, ScheduledTask
@@ -144,7 +145,7 @@ def run_scheduled_task(task_id):
     Args:
         task_id (int): The ID of the ScheduledTask to run.
     """
-    from autoservice.app import create_app
+
     app = create_app()
     with app.app_context():
         task = db.session.get(ScheduledTask, task_id)
